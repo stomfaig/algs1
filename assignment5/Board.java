@@ -9,7 +9,7 @@ public class Board {
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
     public Board(int[][] tiles) {
-        this.n = tiles.size();
+        this.n = tiles.length;
         this.tiles = new int[n][n];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -41,12 +41,11 @@ public class Board {
         int hamming = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if (tiles[i][j] != i * this.n + j) {
+                if (tiles[i][j] != 0 && tiles[i][j] != (i * this.n + j + 1) % (n * n)) {
                     hamming++;
                 }
             }
         }
-        System.out.println("beep boop");
         return hamming;
     }
 
@@ -55,8 +54,9 @@ public class Board {
         int manhattan = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                int correct_j_coord = tiles[i][j] % n;
-                int correct_i_coord = (tiles[i][j] - correct_i_coord) / n;
+                if (tiles[i][j] == 0) continue;
+                int correct_j_coord = (tiles[i][j]-1) % n;
+                int correct_i_coord = (tiles[i][j] - 1 - correct_j_coord) / n;
                 manhattan += Math.abs(correct_i_coord - i) + Math.abs(correct_j_coord - j);
             }
         }
@@ -68,12 +68,23 @@ public class Board {
         return hamming() == 0;
     }
 
-    // does this board equal y?
+    // does this board equal y? this is currently not working...
     public boolean equals(Object y) {
-        if (this.n != y.n) return false;
+        // self check
+        if (this == y)
+            return true;
+        // null check
+        if (y == null)
+            return false;
+        // type check and cast
+        if (getClass() != y.getClass())
+            return false;
+        Board other = (Board) y;
+        // field comparison
+        if (this.n != other.n) return false;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if (tiles[i][j] != y.tiles[i][j]) return false;
+                if (tiles[i][j] != other.tiles[i][j]) return false;
             }
         }
         return true;
@@ -84,12 +95,14 @@ public class Board {
         ArrayList<Board> neighbors = new ArrayList<Board>();
         int[][] copy = new int[this.n][this.n];
         int zero_i = 0, zero_j = 0;
-        for (i = 0; i < n; i++) {
-            for (j = 0; j < n; j++) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
                 if (tiles[i][j] == 0) { zero_i = i; zero_j = j; }
                 copy[i][j] = tiles[i][j];
             }
         }
+        
+        int i = zero_i, j = zero_j;
 
         if (i > 0) {
             copy[i][j] = copy[i-1][j];
@@ -98,7 +111,7 @@ public class Board {
             copy[i-1][j] = copy[i][j];
             copy[i][j] = 0;
         }
-        if (i < this.n) {
+        if (i < this.n-1) {
             copy[i][j] = copy[i+1][j];
             copy[i+1][j] = 0;
             neighbors.add(new Board(copy));
@@ -112,7 +125,7 @@ public class Board {
             copy[i][j-1] = copy[i][j];
             copy[i][j] = 0;
         }
-        if (j < this.n) {
+        if (j < this.n-1) {
             copy[i][j] = copy[i][j+1];
             copy[i][j+1] = 0;
             neighbors.add(new Board(copy));
@@ -123,9 +136,33 @@ public class Board {
     }
 
     // a board that is obtained by exchanging any pair of tiles
-    public Board twin()
+    public Board twin() {
+        int[][] copy = new int[this.n][this.n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                copy[i][j] = tiles[i][j];
+            }
+        }
+
+        // find a pair of tiles in a triangle
+        if(tiles[0][0] == 0) {
+            int temp = copy[1][0];
+            copy[1][0] = copy[0][1];
+            copy[0][1] = temp;
+        } else if (tiles[0][1] == 0) {
+            int temp = copy[1][0];
+            copy[1][0] = copy[0][0];
+            copy[0][0] = temp;
+        } else {
+            int temp = copy[0][1];
+            copy[0][1] = copy[0][0];
+            copy[0][0] = temp;
+        }
+        
+        return new Board(copy);
+    }
 
     // unit testing (not graded)
-    public static void main(String[] args)
+    public static void main(String[] args) { ; }
 
 }
